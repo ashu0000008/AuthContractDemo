@@ -89,4 +89,10 @@ contract AuthMain {
         
         return (true, "", amount, expire);
     }
+    
+    
+    
+    function delContract(string memory contractId) public{
+        delete mAuthInfos[contractId];
+    }
 }

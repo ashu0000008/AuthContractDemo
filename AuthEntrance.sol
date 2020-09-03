@@ -16,8 +16,11 @@ contract AuthEntrance {
         return authContract.addContract(contractId, amount, expireAfter + now);
     }
     
-    function delContract(string memory contractId){
-        
+    function delContract(string memory contractId) public{
+        AuthContract authContract = AuthContract(mContractAddress);
+        authContract.delContract(contractId);
+        AuthMain authMain = AuthMain(mAuthAddress);
+        authMain.delContract(contractId);
     }
     
     function canAuth(string memory contractId) public view returns (bool, string memory){
