@@ -3,6 +3,8 @@ import "./AuthContract.sol";
 
 contract AuthMain {
     
+    event authedEvent(string contractId, string deviceId);
+    
     AuthContract mAuthContract;
     
     struct ContractAuthInfo{
@@ -34,24 +36,26 @@ contract AuthMain {
         return (true, "");
     }
     
-    function reqAuth(string memory contractId, string memory deviceId) public{
+    function reqAuth(string memory contractId, string memory deviceId) public returns(bool){
         bool success;
         string memory reason;
         uint256 amount;
         uint256 expireAt;
         (success, reason, amount, expireAt) = checkContract(contractId);
         if (!success){
-            return ;
+            return false;
         }
         
         ContractAuthInfo storage info = mAuthInfos[contractId];
         if (info.mCount >= amount){
-            return ;
+            return false;
         }
         
         info.mAuthedMap[deviceId] = true;
         info.mCount = info.mCount + 1;
-        return ;
+        
+        emit authedEvent(contractId, deviceId);
+        return true;
     }
     
     function isAuthed(string memory contractId, string memory deviceId) public view returns (bool, string memory){

@@ -3,6 +3,8 @@ import "./AuthContract.sol";
 import "./AuthMain.sol";
 
 contract AuthEntrance {
+    event authedEvent(string contractId, string deviceId);
+    
     address private mContractAddress;
     address private mAuthAddress;
     
@@ -30,7 +32,10 @@ contract AuthEntrance {
     
     function reqAuth(string memory contractId, string memory deviceId) public {
         AuthMain authMain = AuthMain(mAuthAddress);
-        authMain.reqAuth(contractId, deviceId);
+        bool result = authMain.reqAuth(contractId, deviceId);
+        if (result){
+            emit authedEvent(contractId, deviceId);
+        }
     }
     
     function isAuthed(string memory contractId, string memory deviceId) public view returns (bool, string memory){
