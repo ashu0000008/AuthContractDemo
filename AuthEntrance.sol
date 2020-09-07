@@ -3,7 +3,8 @@ import "./AuthContract.sol";
 import "./AuthMain.sol";
 
 contract AuthEntrance {
-    event authedEvent(string contractId, string deviceId);
+    event authedEventFinal(string contractId, string deviceId);
+    event modifyContractEvent(bool success, string reason);
     
     address private mContractAddress;
     address private mAuthAddress;
@@ -18,6 +19,17 @@ contract AuthEntrance {
         return authContract.addContract(contractId, amount, expireAfter + now);
     }
     
+    function modifyContract(string memory contractId, uint256 amount, uint256 expireAfter) public returns (bool){
+        AuthContract authContract = AuthContract(mContractAddress);
+        bool result =  authContract.modifyContract(contractId, amount, expireAfter + now);
+        if (result){
+            emit modifyContractEvent(true, "");
+        }else{
+            emit modifyContractEvent(false, "Contract not exist!");
+        }
+        return result;
+    }
+    
     function delContract(string memory contractId) public{
         AuthContract authContract = AuthContract(mContractAddress);
         authContract.delContract(contractId);
@@ -25,16 +37,16 @@ contract AuthEntrance {
         authMain.delContract(contractId);
     }
     
-    function canAuth(string memory contractId) public view returns (bool, string memory){
+    function canAuth(string memory contractId, string memory deviceId) public view returns (bool, string memory){
         AuthMain authMain = AuthMain(mAuthAddress);
-        return authMain.canAuth(contractId);
+        return authMain.canAuth(contractId, deviceId);
     }
     
     function reqAuth(string memory contractId, string memory deviceId) public {
         AuthMain authMain = AuthMain(mAuthAddress);
         bool result = authMain.reqAuth(contractId, deviceId);
         if (result){
-            emit authedEvent(contractId, deviceId);
+            emit authedEventFinal(contractId, deviceId);
         }
     }
     
@@ -42,4 +54,10 @@ contract AuthEntrance {
         AuthMain authMain = AuthMain(mAuthAddress);
         return authMain.isAuthed(contractId, deviceId);
     }
+    
+    function forbiddenDevice(string memory deviceId) public{
+        AuthMain authMain = AuthMain(mAuthAddress);
+        authMain.addForbiddenDevice(deviceId);
+    }
+    
 }

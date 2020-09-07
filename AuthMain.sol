@@ -3,8 +3,6 @@ import "./AuthContract.sol";
 
 contract AuthMain {
     
-    event authedEvent(string contractId, string deviceId);
-    
     AuthContract mAuthContract;
     
     struct ContractAuthInfo{
@@ -13,13 +11,18 @@ contract AuthMain {
     }
 
     mapping (string => ContractAuthInfo) mAuthInfos;
+    mapping (string=>bool) mForbiddenDevice;
     
     constructor(address contractAddress) public {
         mAuthContract = AuthContract(contractAddress);
     }
     
-    function canAuth(string memory contractId) public view returns (bool, string memory){
+    function canAuth(string memory contractId, string memory deviceId) public view returns (bool, string memory){
         bool success;
+        if (mForbiddenDevice[deviceId] == true){
+            return (false, "Device is forbidden!");
+        }
+        
         string memory reason;
         uint256 amount;
         uint256 expireAt;
@@ -36,7 +39,7 @@ contract AuthMain {
         return (true, "");
     }
     
-    function reqAuth(string memory contractId, string memory deviceId) public returns(bool){
+    function reqAuth(string memory contractId, string memory deviceId) public notForbidden(deviceId) returns(bool){
         bool success;
         string memory reason;
         uint256 amount;
@@ -54,7 +57,6 @@ contract AuthMain {
         info.mAuthedMap[deviceId] = true;
         info.mCount = info.mCount + 1;
         
-        emit authedEvent(contractId, deviceId);
         return true;
     }
     
@@ -98,5 +100,14 @@ contract AuthMain {
     
     function delContract(string memory contractId) public{
         delete mAuthInfos[contractId];
+    }
+    
+    function addForbiddenDevice(string memory deviceId) public{
+        mForbiddenDevice[deviceId] = true;
+    }
+    
+    modifier notForbidden(string memory deviceId){
+        require (mForbiddenDevice[deviceId] == false);
+        _;
     }
 }
