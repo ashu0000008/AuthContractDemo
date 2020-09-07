@@ -55,9 +55,9 @@ contract AuthEntrance {
         return authMain.isAuthed(contractId, deviceId);
     }
     
-    function forbiddenDevice(string memory deviceId) public{
+    function forbiddenDevice(string memory contractId, string memory deviceId) public{
         AuthMain authMain = AuthMain(mAuthAddress);
-        authMain.addForbiddenDevice(deviceId);
+        authMain.addForbiddenDevice(contractId, deviceId);
     }
     
 }

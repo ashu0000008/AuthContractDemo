@@ -8,10 +8,10 @@ contract AuthMain {
     struct ContractAuthInfo{
         uint256 mCount;
         mapping (string => bool) mAuthedMap;
+        mapping (string => bool) mForbiddenDevice;
     }
 
     mapping (string => ContractAuthInfo) mAuthInfos;
-    mapping (string=>bool) mForbiddenDevice;
     
     constructor(address contractAddress) public {
         mAuthContract = AuthContract(contractAddress);
@@ -19,7 +19,8 @@ contract AuthMain {
     
     function canAuth(string memory contractId, string memory deviceId) public view returns (bool, string memory){
         bool success;
-        if (mForbiddenDevice[deviceId] == true){
+        ContractAuthInfo storage info = mAuthInfos[contractId];
+        if (info.mForbiddenDevice[deviceId] == true){
             return (false, "Device is forbidden!");
         }
         
@@ -31,7 +32,6 @@ contract AuthMain {
             return (success, reason);
         }
         
-        ContractAuthInfo storage info = mAuthInfos[contractId];
         if (info.mCount >= amount){
             return (false, "The license quantity has been used up!");
         }
@@ -39,7 +39,7 @@ contract AuthMain {
         return (true, "");
     }
     
-    function reqAuth(string memory contractId, string memory deviceId) public notForbidden(deviceId) returns(bool){
+    function reqAuth(string memory contractId, string memory deviceId) public notForbidden(contractId, deviceId) returns(bool){
         bool success;
         string memory reason;
         uint256 amount;
@@ -61,6 +61,11 @@ contract AuthMain {
     }
     
     function isAuthed(string memory contractId, string memory deviceId) public view returns (bool, string memory){
+        ContractAuthInfo storage info = mAuthInfos[contractId];
+        if (info.mForbiddenDevice[deviceId] == true){
+            return (false, "Device is forbidden!");
+        }
+        
         bool success;
         string memory reason;
         uint256 amount;
@@ -70,7 +75,6 @@ contract AuthMain {
             return (success, reason);
         }
         
-        ContractAuthInfo storage info = mAuthInfos[contractId];
         bool authed = info.mAuthedMap[deviceId];
         if (!authed){
             return (false, "Not authed!");
@@ -102,12 +106,14 @@ contract AuthMain {
         delete mAuthInfos[contractId];
     }
     
-    function addForbiddenDevice(string memory deviceId) public{
-        mForbiddenDevice[deviceId] = true;
+    function addForbiddenDevice(string memory contractId, string memory deviceId) public{
+        ContractAuthInfo storage info = mAuthInfos[contractId];
+        info.mForbiddenDevice[deviceId] = true;
     }
     
-    modifier notForbidden(string memory deviceId){
-        require (mForbiddenDevice[deviceId] == false);
+    modifier notForbidden(string memory contractId, string memory deviceId){
+        ContractAuthInfo storage info = mAuthInfos[contractId];
+        require (info.mForbiddenDevice[deviceId] == false);
         _;
     }
 }
