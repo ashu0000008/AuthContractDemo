@@ -50,6 +50,17 @@ contract AuthEntrance {
         }
     }
     
+    function reqAuth4Performance(string memory contractId, string memory deviceId) public returns(string memory){
+        AuthMain authMain = AuthMain(mAuthAddress);
+        bool result = authMain.reqAuth(contractId, deviceId);
+        if (result){
+            emit authedEventFinal(contractId, deviceId);
+        }
+        return deviceId;
+    }
+    
+    
+    
     function isAuthed(string memory contractId, string memory deviceId) public view returns (bool, string memory){
         AuthMain authMain = AuthMain(mAuthAddress);
         return authMain.isAuthed(contractId, deviceId);
